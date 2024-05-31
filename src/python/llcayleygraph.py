@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 
-from math.extra_math import random_3d_u
+from mathematics.extra_math import random_3d_u
 from graphs.graph import NonOrientedGraph
 from lamplighter import LLElement
 

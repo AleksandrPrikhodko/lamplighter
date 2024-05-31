@@ -15,9 +15,11 @@ from diamond import Diamond
 from lamplighter import LLElement
 from llcayleygraph import LLCayleyGraph
 
-_MAG = 1.5
-DISPLAY = (round(1600 * _MAG), round(1024 * _MAG))
-# DISPLAY = (800, 600)
+# _MAG = 1.5
+# DISPLAY = (round(1600 * _MAG), round(1024 * _MAG))
+# POINT_SIZE = 10
+DISPLAY = (800, 600)
+POINT_SIZE = 5
 
 VERTEX_COLOR = {
     0: np.array([1, 1, 1]),
@@ -53,7 +55,7 @@ def plot(g, frame_i, R0, *, scaling_alpha=0.0003):
             glVertex3fv(p1)
     glEnd()
 
-    glPointSize(10)
+    glPointSize(POINT_SIZE)
     glBegin(GL_POINTS)
     for v in g.vertexes:
         p1 = g.coo[v]
@@ -102,10 +104,9 @@ def before_plot():
 
 
 def start_show_pygame(g, R0, mode=1, scaling_alpha=0.0003):
-
-
-
-
+    """
+    Obsolete. Just a template
+    """
     frame_i = 0
     while True:
         # for event in pygame.event.get():
@@ -164,8 +165,8 @@ def growing_balls():
     g.create_origin()
     g.expand_border()
     print(g)
-    R0 = 2
-    scaling_alpha = 0.003
+    R0 = 3
+    scaling_alpha = 0.001
 
     open_scene_pygame()
 
@@ -193,12 +194,66 @@ def growing_balls():
                 g.expand_border()
 
 
+def growing_diamonds():
+    raise NotImplementedError()
+
+
+
+def show_diamond(level, *, t_propagate=0):
+    _1 = LLElement(0, 0)
+    d = Diamond(start=_1)
+    for k in range(1, level):
+        d = Diamond(start=d)
+
+    R0 = 2 * level
+    scaling_alpha = 0.001
+
+    v_set0 = d.vertexes()
+    v_set = set()
+    for k in range(t_propagate + 1):
+        v_set = v_set.union(v_set0)
+        v_set0 = {x.br() for x in v_set0}
+    g = LLCayleyGraph()
+    g.build_graph_from_v_set(v_set)
+
+    open_scene_pygame()
+
+    frame_i = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        before_plot()
+        plot(g, frame_i, R0, scaling_alpha=scaling_alpha)
+        pygame.display.flip()
+        pygame.time.wait(10)
+        frame_i += 1
+
+        if frame_i < 1500:
+            g.move(0.025)
+
+        if frame_i % 50 == 0 and frame_i <= 250:
+            print("{:4d}".format(frame_i))
+
+
 
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("-a", "--action")
+    parser.add_option("-l", "--level")
+    parser.add_option("", "--tp")
 
     (options, args) = parser.parse_args()
+
+    level = 1
+    if options.level is not None:
+        level = int(options.level)
+
+    t_propagate = 0
+    if options.tp is not None:
+        t_propagate = int(options.tp)
 
     action = options.action
 
@@ -206,6 +261,11 @@ if __name__ == '__main__':
         growing_balls()
     elif action == "growing_diamonds":
         growing_diamonds()
+    elif action == "show_diamond":
+        show_diamond(level, t_propagate=t_propagate)
+
+
+    exit()
 
     g = LLCayleyGraph()
     # g.create_origin()
